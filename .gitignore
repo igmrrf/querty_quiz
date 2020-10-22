@@ -12,6 +12,9 @@ client/node_modules/
 # production
 /build
 
+client/build
+
+build
 ./.env
 
 # misc
