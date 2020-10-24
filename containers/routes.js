@@ -4,20 +4,21 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const client = require('../controllers/client');
 const error = require('../middlewares/error');
-const levels = require('../utils/levels');
+const Words = require('../routes/words');
+const Games = require('../routes/games');
 
 module.exports = function (app) {
+  console.log('Calling on routes');
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cors());
+  app.use('/api/words', Words);
+  app.use('/api/games', Games);
   app.use(express.static(path.join(__dirname, '../client/build')));
   app.get('/', client);
   app.get('/game', client);
   app.get('/leaderboard', client);
   app.get('/404', client);
-  app.get('/levels', (req, res) => {
-    return res.send(levels);
-  });
-  app.post('/words, WordsRoute');
+
   app.use(error);
 };

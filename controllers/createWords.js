@@ -1,7 +1,7 @@
 module.exports = async function (req, res) {
   console.log(req.body);
   const { words } = req.body;
-  const existingWords = Word.find({ words });
+  const existingWords = await Word.find({ words });
   if (existingWords)
     return res
       .status(400)
@@ -10,5 +10,5 @@ module.exports = async function (req, res) {
     words,
   });
   const saved = await word.save();
-  res.send(201).send(saved);
+  return res.status(201).send(saved);
 };

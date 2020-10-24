@@ -7,191 +7,195 @@ import alphabets from '../utils/alphabets';
 import Sound from '../components/sound';
 import axios from '../utils/axios';
 
+let wrongKey;
+const failed = [];
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      leves: null,
-      words: [''],
+      levels: null,
+      words: [],
+      failedWords: [],
       input: '',
       multiplier: 1,
       score: 0,
-      level: 1,
-      timer: 2500,
-      left: false,
+      level: 0,
+      timer: 10000,
+      wrong: false,
       right: false,
       multiplied: false,
       leveled: false,
       gameOver: false,
-      loading: false,
+      loaded: false,
     };
     this.intervalPointer = null;
   }
-  startTimer = () => {
-    console.log('Timer Started');
-    const { level, words, timer } = this.state;
-    this.intervalPointer = setInterval(() => {
-      console.log('before', this.state.words);
-      console.log('Before Timer', this.state.timer);
 
-      const removeWord = this.state.words.shift();
-      this.setState({
-        timer: timer - 500,
-        words: this.state.words.filter((word) => word !== removeWord),
-        input: '',
-        multiplier: 1,
+  componentDidMount() {
+    document.addEventListener('keypress', this.logKey);
+    axios.get('api/words').then((res) => {
+      this.setState({ levels: res.data }, () => {
+        this.setState({ loaded: true });
       });
-
-      console.log('After', this.state.words);
-      console.log('After Timer', this.state.timer);
-    }, timer);
-  };
-  updateWords = () => {
-    const { level, words, timer, score, levels } = this.state;
-    if (level === 3) {
-      this.setState({ gameOver: true }, () => {
-        console.log('Game Over');
-      });
-      setTimeout(() => {
-        window.alert(`Game Over\n score:${score}`);
-      }, 1000);
-    } else {
-      if (score === 0) {
-        this.setState({ gameOver: true }, () => {
-          console.log('Game Over');
-        });
-        setTimeout(() => {
-          window.alert(`Game Over\n score:${score}`);
-        }, 1000);
-      } else {
-        this.setState({ level: level + 1, words: levels[level + 1] }, () => {
-          this.startTimer();
-        });
-        this.setState({ leveled: true }, () => {
-          this.setState({ leveled: false });
-        });
-      }
-    }
-  };
-  setWords = () => {
-    const { level, words, timer, levels } = this.state;
-    this.setState({ words: levels[level] });
-  };
-
-  start = () => {
-    this.setWords();
-    this.startTimer();
-  };
-
-  stopTimer = () => {
-    console.log('Timer Stopped');
-    clearInterval(this.intervalPointer);
-  };
-
-  log = (e) => console.log(e);
-  logKey = (e) => {
-    console.log(e.key);
-  };
+    });
+  }
 
   componentDidUpdate() {
-    const { words, level, gameOver } = this.state;
-    if (words.length === 0) {
-      console.log('No more words');
-      if (!gameOver) this.updateWords();
+    const { words, gameOver, failedWords, score } = this.state;
+    console.log(failedWords.length);
+    if (failedWords.length > 3 && gameOver === false) {
+      this.setState({ gameOver: true }, () => {
+        this.stopTimer();
+        alert(`Game Over\n score:${score}`);
+      });
+    } else if (words.length === 0 && score > 1 && gameOver === false) {
       this.stopTimer();
+      this.updateWords();
     }
-
-    document.addEventListener('keypress', this.logKey);
   }
 
   componentWillUnmount() {
     document.removeEventListener('keypress', this.log);
-    clearInterval(this.intervalPointer);
+    this.stopTimer();
   }
 
-  onKeyPress = (button) => {
-    console.log('Button pressed', button);
-    this.showPressedKey(button);
+  startTimer = () => {
+    const { timer } = this.state;
+    this.intervalPointer = setInterval(() => {
+      const removeWord = this.state.words.shift();
+      failed.push(removeWord);
+      this.setState({
+        words: this.state.words.filter((word) => word !== removeWord),
+        input: '',
+        failedWords: failed,
+        timer: this.state.timer - 500,
+      });
+    }, timer);
   };
 
-  showPressedKey = (button) => {
-    if (alphabets.big.includes(button)) {
-      const key = `[data-skbtn='${button}']`;
-      document
-        .querySelectorAll('.hg-standardBtn')
-        .forEach((element) => element.classList.remove('clicked'));
-      document.querySelector(key).classList.add('clicked');
+  stopTimer = () => {
+    clearInterval(this.intervalPointer);
+  };
+
+  updateWords = () => {
+    const { level, score, levels, words } = this.state;
+    if (level === levels.length && words.length === 0) {
+      this.setState({ gameOver: true }, () => {
+        this.stopTimer();
+        alert(`Game Over\n score:${score}`);
+      });
+    } else {
+      this.setState({ level: level + 1, leveled: true }, () => {
+        this.setState({ leveled: false, words: levels[level].words });
+        this.startTimer();
+      });
     }
   };
+
+  start = () => {
+    const { level, levels } = this.state;
+    if (levels.length > 0) {
+      this.setState({ level: level + 1, words: levels[level].words });
+      this.startTimer();
+    } else {
+      alert("There's no word in the database");
+    }
+  };
+
+  log = (e) => console.log(e);
+  logKey = (e) => {
+    console.log(e);
+  };
+
+  showPressedKey = (key) => {
+    if (wrongKey) wrongKey.classList.remove('wrong');
+    const query = `[data-skbtn='${key}']`;
+    document
+      .querySelectorAll('.hg-standardBtn')
+      .forEach((element) => element.classList.remove('clicked'));
+    document.querySelector(query).classList.add('clicked');
+  };
+
+  showWrongKey = (key) => {
+    console.log(key);
+    const query = `[data-skbtn='${key}']`;
+    wrongKey = document.querySelector(query);
+    document
+      .querySelectorAll('.hg-standardBtn')
+      .forEach((element) => element.classList.remove('wrong'));
+    document.querySelector(query).classList.add('wrong');
+  };
+
   onChange = (key) => {
     this.setState({ input: key });
-    console.log('Input changed', key);
   };
+
   restart = () => {
+    const { levels, level } = this.state;
     this.stopTimer();
     this.setState(
       {
-        words: [''],
         input: '',
         multiplier: 1,
         score: 0,
-        level: 1,
+        level: 0,
         timer: 2500,
         gameOver: false,
       },
       () => {
-        console.log(this.state.words);
+        this.setState({ words: levels[level] });
         this.start();
       }
     );
-    // this.intervalPointer = null;
   };
-  componentDidMount() {
-    axios.get('levels').then((res) => {
-      console.log(res);
-      this.setState({ levels: res.data });
-    });
-  }
+
   onChangeInput = ({ target: { value } }) => {
-    // this.setState({ left: false, right: false });
-    const { input, level, words, multiplier, score } = this.state;
+    const { level, words, multiplier, score } = this.state;
     console.log(value);
+
     if (value && words[0]) {
       const length = value.length;
       const letter = value[length - 1].toUpperCase();
       const upper = value.toUpperCase();
-      console.log(letter);
 
       if (alphabets.big.includes(letter)) {
         this.showPressedKey(letter);
       }
       this.setState({ input: upper });
       if (upper === words[0].substr(0, length)) {
-        console.log('Still Correct');
         this.setState({ right: true }, () => {
           this.setState({ right: false });
         });
       } else {
-        this.setState({ multiplier: 1 });
-        this.setState({ left: true }, () => {
-          this.setState({ left: false });
+        this.setState({ multiplier: 1, wrong: true }, () => {
+          this.setState({ wrong: false });
         });
-        console.log('Error made');
+        if (alphabets.big.includes(letter)) {
+          const currentCorrect = words[0].substr(0, length);
+
+          const currentCorrectLetter =
+            currentCorrect[currentCorrect.length - 1];
+
+          this.showPressedKey(currentCorrectLetter);
+          this.showWrongKey(letter);
+        }
       }
 
       if (upper === words[0]) {
         this.stopTimer();
-        console.log('Filtering');
-        this.setState({ score: score + level * 10 * multiplier });
+        this.setState(
+          {
+            score: score + level * 10 * multiplier,
+            multiplier: multiplier + 1,
+            multiplied: true,
+          },
+          () => {
+            this.setState({ multiplied: false });
+          }
+        );
 
-        this.setState({ multiplier: multiplier + 1 });
-        this.setState({ multiplied: true }, () => {
-          this.setState({ multiplied: false });
-        });
         const newWords = words.filter((word) => word !== upper);
-        this.setState({ words: newWords });
-        this.setState({ input: '' });
-        console.log(input);
+        this.setState({ words: newWords, input: '' });
         this.startTimer();
       }
 
@@ -205,16 +209,17 @@ class App extends Component {
       words,
       multiplier,
       score,
-      left,
+      wrong,
       right,
       leveled,
       multiplied,
       gameOver,
+      failedWords,
     } = this.state;
     return (
       <div className='App'>
         <Sound
-          left={left}
+          left={wrong}
           right={right}
           leveled={leveled}
           multiplied={multiplied}
@@ -230,12 +235,16 @@ class App extends Component {
           <Stats level={level} multiplier={multiplier} score={score} />
           <div style={{ color: 'black', width: '80%' }}>
             <div className='slide'>
-              {words
-                ? words.slice(0, 1).map((word, i) => (
+              {failedWords.length > 0
+                ? failedWords.map((word, i) => (
                     <h4 key={i}>
                       {word} <span>{i + 1}</span>
                     </h4>
                   ))
+                : null}
+
+              {words.length > 0
+                ? words.slice(0, 1).map((word, i) => <h4 key={i}>{word}</h4>)
                 : null}
             </div>
             <input
@@ -248,7 +257,7 @@ class App extends Component {
               keyboardRef={(r) => (this.keyboard = r)}
               layoutName={'default'}
               onChange={this.onChange}
-              onKeyPress={this.onKeyPress}
+              onKeyPress={this.showPressedKey}
               layout={{
                 default: [
                   'Q W E R T Y U I O P',

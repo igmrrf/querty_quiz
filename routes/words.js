@@ -1,27 +1,27 @@
+const express = require('express');
+const router = express.Router();
 const Word = require('../models/Word');
 
-const route = require('express').Router();
-
-route.get('/', async (req, res) => {
+router.get('/', async (req, res) => {
   console.log(req.body);
   const words = await Word.find();
   if (!words) return res.status(404).send('No Words Found');
   res.send(words);
 });
 
-route.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
   console.log(req.body);
-  const { words } = req.body;
-  const existingWords = Word.find({ words });
-  if (existingWords)
-    return res
-      .status(400)
-      .send('Another array that consist of those words already exist');
+  const { words, level } = req.body;
+  const existingWords = await Word.find({ level: level });
+  if (existingWords.length > 0)
+    return res.status(400).send('Words for this level already exist');
   const word = new Word({
     words,
+    level,
   });
   const saved = await word.save();
+  console.log(saved);
   res.send(201).send(saved);
 });
 
-module.exports = route;
+module.exports = router;

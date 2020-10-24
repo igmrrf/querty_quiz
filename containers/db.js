@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const winston = require('winston');
 
-console.log(process.env.MONGOOSE_DATABASE_URL);
 console.log('Hello World');
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
