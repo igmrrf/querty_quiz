@@ -26,7 +26,6 @@ class App extends Component {
       multiplied: false,
       leveled: false,
       gameOver: false,
-      loaded: false,
     };
     this.intervalPointer = null;
   }
@@ -34,9 +33,7 @@ class App extends Component {
   componentDidMount() {
     document.addEventListener('keypress', this.logKey);
     axios.get('api/words').then((res) => {
-      this.setState({ levels: res.data }, () => {
-        this.setState({ loaded: true });
-      });
+      this.setState({ levels: res.data });
     });
   }
 
@@ -60,7 +57,6 @@ class App extends Component {
   }
 
   startTimer = () => {
-    const { timer } = this.state;
     this.intervalPointer = setInterval(() => {
       const removeWord = this.state.words.shift();
       failed.push(removeWord);
@@ -68,9 +64,11 @@ class App extends Component {
         words: this.state.words.filter((word) => word !== removeWord),
         input: '',
         failedWords: failed,
-        timer: this.state.timer - 500,
       });
-    }, timer);
+      if (this.state.timer > 2000) {
+        this.setState({ timer: this.state.timer - 300 });
+      }
+    }, this.state.timer);
   };
 
   stopTimer = () => {
@@ -135,15 +133,12 @@ class App extends Component {
     this.stopTimer();
     this.setState(
       {
-        input: '',
         multiplier: 1,
         score: 0,
-        level: 0,
-        timer: 2500,
-        gameOver: false,
+        level: 1,
+        timer: 10000,
       },
       () => {
-        this.setState({ words: levels[level] });
         this.start();
       }
     );
@@ -151,36 +146,28 @@ class App extends Component {
 
   onChangeInput = ({ target: { value } }) => {
     const { level, words, multiplier, score } = this.state;
-    console.log(value);
-
     if (value && words[0]) {
       const length = value.length;
       const letter = value[length - 1].toUpperCase();
       const upper = value.toUpperCase();
 
-      if (alphabets.big.includes(letter)) {
+      if (
+        alphabets.big.includes(letter) &&
+        upper === words[0].substr(0, length)
+      ) {
         this.showPressedKey(letter);
-      }
-      this.setState({ input: upper });
-      if (upper === words[0].substr(0, length)) {
-        this.setState({ right: true }, () => {
+        this.setState({ input: upper, right: true }, () => {
           this.setState({ right: false });
         });
-      } else {
+      } else if (alphabets.big.includes(letter)) {
         this.setState({ multiplier: 1, wrong: true }, () => {
           this.setState({ wrong: false });
         });
-        if (alphabets.big.includes(letter)) {
-          const currentCorrect = words[0].substr(0, length);
-
-          const currentCorrectLetter =
-            currentCorrect[currentCorrect.length - 1];
-
-          this.showPressedKey(currentCorrectLetter);
-          this.showWrongKey(letter);
-        }
+        const currentCorrect = words[0].substr(0, length);
+        const currentCorrectLetter = currentCorrect[currentCorrect.length - 1];
+        this.showPressedKey(currentCorrectLetter);
+        this.showWrongKey(letter);
       }
-
       if (upper === words[0]) {
         this.stopTimer();
         this.setState(
@@ -193,12 +180,10 @@ class App extends Component {
             this.setState({ multiplied: false });
           }
         );
-
         const newWords = words.filter((word) => word !== upper);
         this.setState({ words: newWords, input: '' });
         this.startTimer();
       }
-
       this.keyboard.setInput(value);
     } else this.setState({ input: value });
   };
@@ -225,10 +210,10 @@ class App extends Component {
           multiplied={multiplied}
           end={gameOver}
         />
-        <header className='App-header'>
+        <section className='App-header'>
           <Logo />
           <div>
-            <button onClick={this.start}>Start</button>{' '}
+            <button onClick={this.start}>Start</button>
             <button onClick={this.restart}>Restart</button>
           </div>
 
@@ -267,7 +252,7 @@ class App extends Component {
               }}
             />
           </div>
-        </header>
+        </section>
       </div>
     );
   }

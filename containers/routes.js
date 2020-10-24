@@ -15,10 +15,6 @@ module.exports = function (app) {
   app.use('/api/words', Words);
   app.use('/api/games', Games);
   app.use(express.static(path.join(__dirname, '../client/build')));
-  app.get('/', client);
-  app.get('/game', client);
-  app.get('/leaderboard', client);
-  app.get('/404', client);
-
+  app.use('/', client);
   app.use(error);
 };
