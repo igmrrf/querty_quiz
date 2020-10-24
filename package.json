@@ -10,11 +10,11 @@
   "scripts": {
     "client": "cd client && yarn start",
     "server": "nodemon index.js",
-    "build": "cd client && npm run build",
+    "build": "cd client && yarn run build",
     "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\"",
     "start": "node index.js",
     "back": "nodemon index.js",
-    "install": "npm install && cd client && npm install",
+    "install": "yarn install && cd client && yarn install",
     "heroku-postbuild": "cd client && npm install && npm install --only=dev --no-shrinkwrap && npm run build"
   },
   "keywords": [],
