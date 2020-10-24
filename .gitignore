@@ -9,6 +9,13 @@ client/node_modules/
 # testing
 /coverage
 
+.build/
+/build
+
+./client/build
+
+
+
 # production
 ./.env
 
