@@ -7,21 +7,27 @@
 3. React.js
 4. Node.js
 
-## Project Setup
+## PROJECT SETUP
 
 Open your terminal and run the following commands to get your copy of the projct running on your local or remote environment
 
-### `git clone https://github.com/igmrrf/qwerty_quiz`
+#### `git clone https://github.com/igmrrf/querty_quiz`
 
-Gets a copy of the codebase to your development environment
+### Environmental Variables
 
-### `yarn install`
+created a .env file in the root folder of the project and another in the client folder
+
+There's are .env.example files in both folder, copy the information and fill them appropriately
+
+### Dependencies
+
+#### `yarn install`
 
 Installs Dependencies and Dev-dependencies required to run the project successfully
 
-After which you can run either of the available scripts that fit your purpose
+Run the command on the root folder, then `cd client` and run the command again
 
-## Dependencies
+After which you can run either of the available scripts that fit your purpose
 
     SERVER DEPENDENCIES
 
@@ -41,15 +47,11 @@ After which you can run either of the available scripts that fit your purpose
        "axios": "^0.20.0",
         "react": "^16.14.0",
         "react-dom": "^16.14.0",
-        "react-leaderboard": "^0.0.3",
         "react-router-dom": "^5.2.0",
         "react-scripts": "3.4.3",
         "react-simple-keyboard": "^2.5.9",
         "use-sound": "^1.0.2"
     },
-
-## Dev Dependencies
-
     "devDependencies": {
         "concurrently": "^5.3.0"
     }
@@ -65,7 +67,6 @@ In the project directory, you can run:
             "dev": "concurrently --kill-others-on-fail \"yarn server\" \"yarn client\"",
             "start": "node index.js",
             "start:dev": "nodemon index.js",
-            "install": "yarn install && cd client && yarn install",
             "heroku-postbuild": "cd client && yarn install && yarn install --only=dev --no-shrinkwrap && yarn run build"
         },
 
@@ -90,4 +91,5 @@ Your app is ready to be deployed!
 You can deploy your project to heroku or use a CI/CD service through Github or any VCS hub.
 
 ### SERVER DOCUMENTATION
-Visit [Postman Documentation](https://www.postmain.com/docs/qwerty-quiz/docs/34jo2i4o2i4j2oi4j)
+
+Visit [Postman Documentation](https://documenter.getpostman.com/view/9425614/TVYF7y5y)
