@@ -4,10 +4,11 @@ import axios from '../utils/axios';
 const LeaderBoard = () => {
   const [games, setGames] = useState([]);
   useEffect(() => {
-    axios.get('api/games').then((res) => {
-      setGames(res.data);
-    });
-    console.log('edited');
+    try {
+      axios.get('api/games').then((res) => setGames(res.data));
+    } catch (error) {
+      console.log(error.message);
+    }
   }, []);
   return (
     <div className='App'>

@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 
 const gameSchema = new mongoose.Schema({
-  IP: {
-    type: String,
-  },
   average_score: {
     type: Number,
     required: true,

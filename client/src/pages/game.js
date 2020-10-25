@@ -6,6 +6,7 @@ import Stats from '../components/statistics';
 import alphabets from '../utils/alphabets';
 import Sound from '../components/sound';
 import axios from '../utils/axios';
+import Modal from '../components/modal';
 
 let wrongKey;
 const failed = [];
@@ -16,11 +17,12 @@ class App extends Component {
       levels: null,
       words: [],
       failedWords: [],
+      showModal: false,
       input: '',
       multiplier: 1,
       score: 0,
       level: 0,
-      timer: 10000,
+      timer: 5000,
       wrong: false,
       right: false,
       multiplied: false,
@@ -29,6 +31,9 @@ class App extends Component {
     };
     this.intervalPointer = null;
   }
+  handleShow = () => {
+    this.setState({ showModal: !this.state.showModal });
+  };
 
   componentDidMount() {
     document.addEventListener('keypress', this.logKey);
@@ -39,11 +44,10 @@ class App extends Component {
 
   componentDidUpdate() {
     const { words, gameOver, failedWords, score } = this.state;
-    console.log(failedWords.length);
     if (failedWords.length > 3 && gameOver === false) {
       this.setState({ gameOver: true }, () => {
+        this.setState({ showModal: true });
         this.stopTimer();
-        alert(`Game Over\n score:${score}`);
       });
     } else if (words.length === 0 && score > 1 && gameOver === false) {
       this.stopTimer();
@@ -66,7 +70,7 @@ class App extends Component {
         failedWords: failed,
       });
       if (this.state.timer > 2000) {
-        this.setState({ timer: this.state.timer - 300 });
+        this.setState({ timer: this.state.timer - 200 });
       }
     }, this.state.timer);
   };
@@ -76,11 +80,11 @@ class App extends Component {
   };
 
   updateWords = () => {
-    const { level, score, levels, words } = this.state;
+    const { level, levels, words } = this.state;
     if (level === levels.length && words.length === 0) {
       this.setState({ gameOver: true }, () => {
         this.stopTimer();
-        alert(`Game Over\n score:${score}`);
+        this.setState({ showModal: true });
       });
     } else {
       this.setState({ level: level + 1, leveled: true }, () => {
@@ -91,6 +95,7 @@ class App extends Component {
   };
 
   start = () => {
+    document.getElementById('let-the-games-begin').focus();
     const { level, levels } = this.state;
     if (levels.length > 0) {
       this.setState({ level: level + 1, words: levels[level].words });
@@ -100,9 +105,27 @@ class App extends Component {
     }
   };
 
+  restart = () => {
+    failed.length = 0;
+    this.stopTimer();
+    this.setState(
+      {
+        failedWords: [],
+        multiplier: 1,
+        score: 0,
+        level: 0,
+        timer: 5000,
+        gameOver: false,
+      },
+      () => {
+        this.start();
+      }
+    );
+  };
+
   log = (e) => console.log(e);
   logKey = (e) => {
-    console.log(e);
+    console.log(e.key);
   };
 
   showPressedKey = (key) => {
@@ -115,7 +138,6 @@ class App extends Component {
   };
 
   showWrongKey = (key) => {
-    console.log(key);
     const query = `[data-skbtn='${key}']`;
     wrongKey = document.querySelector(query);
     document
@@ -126,22 +148,6 @@ class App extends Component {
 
   onChange = (key) => {
     this.setState({ input: key });
-  };
-
-  restart = () => {
-    const { levels, level } = this.state;
-    this.stopTimer();
-    this.setState(
-      {
-        multiplier: 1,
-        score: 0,
-        level: 1,
-        timer: 10000,
-      },
-      () => {
-        this.start();
-      }
-    );
   };
 
   onChangeInput = ({ target: { value } }) => {
@@ -200,6 +206,7 @@ class App extends Component {
       multiplied,
       gameOver,
       failedWords,
+      showModal,
     } = this.state;
     return (
       <div className='App'>
@@ -212,9 +219,18 @@ class App extends Component {
         />
         <section className='App-header'>
           <Logo />
+          <Modal
+            score={score}
+            level={level}
+            hideModal={this.handleShow}
+            show={showModal}
+          />
           <div>
-            <button onClick={this.start}>Start</button>
-            <button onClick={this.restart}>Restart</button>
+            {level ? (
+              <button onClick={this.restart}>Restart</button>
+            ) : (
+              <button onClick={this.start}>Start</button>
+            )}
           </div>
 
           <Stats level={level} multiplier={multiplier} score={score} />
@@ -232,12 +248,20 @@ class App extends Component {
                 ? words.slice(0, 1).map((word, i) => <h4 key={i}>{word}</h4>)
                 : null}
             </div>
-            <input
-              value={input}
-              placeholder={'Tap'}
-              onChange={this.onChangeInput}
-              autoFocus
-            />
+            <span style={{ fontSize: '14px', color: 'white' }}>
+              Fail attempts left: {4 - failedWords.length}
+            </span>
+            <br />
+            {!gameOver ? (
+              <input
+                value={input}
+                placeholder={'Tap'}
+                onChange={this.onChangeInput}
+                autoFocus
+                id={'let-the-games-begin'}
+              />
+            ) : null}
+
             <Keyboard
               keyboardRef={(r) => (this.keyboard = r)}
               layoutName={'default'}
